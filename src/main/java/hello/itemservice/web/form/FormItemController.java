@@ -1,15 +1,19 @@
 package hello.itemservice.web.form;
 
+import hello.itemservice.domain.item.DeliveryCode;
 import hello.itemservice.domain.item.Item;
 import hello.itemservice.domain.item.ItemRepository;
+import hello.itemservice.domain.item.ItemType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
+import java.util.*;
 
+@Slf4j
 @Controller
 @RequestMapping("/form/items")
 @RequiredArgsConstructor
@@ -31,14 +35,24 @@ public class FormItemController {
         return "form/item";
     }
 
+//    @GetMapping("/add")
+//    public String addForm() {
+//        return "form/addForm";
+//    }
+
     @GetMapping("/add")
-    public String addForm() {
+    public String addForm(Model model) {
+        model.addAttribute("item", new Item());
         return "form/addForm";
     }
 
     @PostMapping("/add")
     public String addItem(@ModelAttribute Item item, RedirectAttributes redirectAttributes) {
         Item savedItem = itemRepository.save(item);
+        log.info("item {}", savedItem);
+        log.info("item.getIsOnSale() {}", savedItem.getIsOnSale());
+        log.info("item.getLocations() {}", savedItem.getLocations());
+        log.info("item.itemType={}", item.getItemType());
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
         return "redirect:/form/items/{itemId}";
@@ -55,6 +69,31 @@ public class FormItemController {
     public String edit(@PathVariable Long itemId, @ModelAttribute Item item) {
         itemRepository.update(itemId, item);
         return "redirect:/form/items/{itemId}";
+    }
+
+    //    auto calls model.addAttribute("regions", returnvalue->regions{MAP<STRING,STRING>}) upon method call
+    @ModelAttribute("regions")
+    public Map<String, String> regions() {
+        Map<String, String> regions = new LinkedHashMap<>();
+        regions.put("SEOUL", "서울");
+        regions.put("BUSAN", "부산");
+        regions.put("JEJU", "제주");
+        return regions;
+    }
+
+    //    auto calls model.addAttribute("itemTypes", returnvalue-> all enum values in an ArrayList) upon method call
+    @ModelAttribute("itemTypes")
+    public ItemType[] itemTypes() {
+        return ItemType.values();
+    }
+
+    @ModelAttribute("deliveryCodes")
+    public List<DeliveryCode> deliveryCode() {
+        List<DeliveryCode> deliveryCodes = new ArrayList<>();
+        deliveryCodes.add(new DeliveryCode("FAST", "빠른 배송"));
+        deliveryCodes.add(new DeliveryCode("NORMAL", "일반 배송"));
+        deliveryCodes.add(new DeliveryCode("SLOW", "느린 배송"));
+        return deliveryCodes;
     }
 
 }
